@@ -59,8 +59,22 @@ int main(int argc, char *argv[]) {
     server_addr.sin_port = htons(8888);
     
     // O IP que o usuário digitou.
-    // inet_addr() traduz o IP (string de texto) para um formato numérico de rede, por exemplo: "192.168.1.10" → bytes de rede 0xC0 0xA8 0x01 0x0A
+    // inet_addr() traduz o IP (string de texto) para um formato numérico de rede, por exemplo: "192.168.1.10" → bytes de rede 0xC0 0xA8 0x01 0x0A  
     server_addr.sin_addr.s_addr = inet_addr(argv[1]);
+
+    // Fazer a chamada: funcao connect()
+    printf("Conectando ao servidor...\n");
+    
+    // Tentamos nos conectar.
+    // Passamos nosso socket, o endereço do servidor (com um "cast" para o tipo genérico)
+    // e o tamanho da estrutura de endereço.
+    if (connect(socket_desc, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+        // Se connect() retornar um número menor que 0, deu erro.
+        perror("Conexao falhou");
+        return 1;
+    }
+
+    printf("Conectado com sucesso!\n");
 
 
 }
