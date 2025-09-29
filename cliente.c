@@ -46,17 +46,20 @@ int main(int argc, char *argv[]) {
     ///////////////////////////////////////////////////////////////////////////
     // Agenda de contatos (estrutura do endereco)
     ///////////////////////////////////////////////////////////////////////////
+    
+    // Essa estrutura guarda tudo que o kernel precisa saber para se conectar 
+    // a um endereço IPv4: família (IPv4), porta e o endereço IP (além de um campo de preenchimento).
     struct sockaddr_in server_addr; // A "ficha de contato" do servidor.
 
     // Preenchendo a ficha...
-    server_addr.sin_family = AF_INET; // Família de endereço: Internet IPv4
+    server_addr.sin_family = AF_INET; // Família de endereço: Internet IPv4, trocar para af_INET6 para IPv6
     
     // A porta que vocês combinaram.
-    // htons() traduz o número da porta para um formato que a rede entende.
+    // htons() traduz o número da porta para um formato que a rede entende, por exemplo: 8888 em hex é 0x22B8.
     server_addr.sin_port = htons(8888);
     
     // O IP que o usuário digitou.
-    // inet_addr() traduz o IP (string de texto) para um formato numérico de rede.
+    // inet_addr() traduz o IP (string de texto) para um formato numérico de rede, por exemplo: "192.168.1.10" → bytes de rede 0xC0 0xA8 0x01 0x0A
     server_addr.sin_addr.s_addr = inet_addr(argv[1]);
 
 
