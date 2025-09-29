@@ -11,6 +11,40 @@
 #include <arpa/inet.h>  // Para manipulação de endereços de rede
 
 
+// Esta função será o nosso "Ouvido".
+// Ela será executada por uma thread separada.
+// O tipo de retorno 'void *' e o argumento 'void *' são padrão para funções de thread.
+void *thread_recebimento(void *arg) {
+    int socket_desc = *(int*)arg; // Recebemos o ID do socket pelo argumento.
+    char server_reply[2000];      // Um "buffer" para guardar a mensagem que chegar.
+    int read_size;                // Para guardar o número de bytes que recebemos.
+
+    // Loop infinito para ficar constantemente esperando por mensagens.
+    while( (read_size = recv(socket_desc, server_reply, 2000, 0)) > 0 ) {
+        // Quando recv() retorna um valor > 0, significa que uma mensagem chegou.
+        
+        // Adicionamos um terminador de string para garantir que estamos lidando com texto.
+        server_reply[read_size] = '\0';
+        
+        // Imprimimos a mensagem do amigo na tela.
+        printf("Amigo: %s", server_reply);
+        
+        // Limpamos o buffer para a próxima mensagem.
+        memset(server_reply, 0, sizeof(server_reply));
+    }
+
+    // Se o loop terminar, é porque a conexão foi perdida.
+    if(read_size == 0) {
+        printf("Servidor desconectou. Pressione ENTER para sair.\n");
+    } else if(read_size == -1) {
+        perror("recv falhou");
+    }
+
+    // Se a conexão cair, a thread termina.
+    return 0;
+}
+
+
 int main(int argc, char *argv[]) {
 
     /////////////////////////////////////////////////////////////////////////////
@@ -75,6 +109,39 @@ int main(int argc, char *argv[]) {
     }
 
     printf("Conectado com sucesso!\n");
+
+
+    /////////////////////////////////////////////////////////////////////////////////////
+    // LANÇANDO A THREAD DO "OUVIDO"
+    /////////////////////////////////////////////////////////////////////////////////////
+    
+    pthread_t thread_id; // Variável para guardar o ID da nossa nova thread.
+
+    // A chamada que cria e lança a nova thread!
+    // 1º arg: O endereço da variável do ID.
+    // 2º arg: Atributos especiais (não precisamos, então NULL).
+    // 3º arg: O nome da função que a thread vai executar (nosso "Ouvido").
+    // 4º arg: O argumento que vamos passar para a função (o ID do socket).
+    if (pthread_create(&thread_id, NULL, thread_recebimento, (void*) &socket_desc) < 0) {
+        perror("Nao foi possivel criar a thread");
+        return 1;
+    }
+
+    // --- O LOOP PRINCIPAL SE TORNA A "VOZ" ---
+    char message[1000]; // Buffer para a mensagem que vamos digitar.
+    while (1) {
+        // fgets lê uma linha inteira do teclado, incluindo o "Enter".
+        fgets(message, 1000, stdin);
+
+        // Se o envio falhar, provavelmente a conexão caiu.
+        if (send(socket_desc, message, strlen(message), 0) < 0) {
+            perror("Envio falhou");
+            return 1;
+        }
+    }
+
+    // O programa em teoria nunca chegará aqui por causa do loop infinito.
+    close(socket_desc);
 
 
 }
