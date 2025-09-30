@@ -24,10 +24,40 @@ int main(int argc, char *argv[]){
     struct sockaddr_in server_addr; 
     struct sockaddr_in client_addr;
 
+    socklen_t addr_len = sizeof(client_addr);
+
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(porta);
     server_addr.sin_addr.s_addr = INADDR_ANY;
 
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
 
+    if(server_socket < 0){
+        perror("Erro ao obter licença de socket.");
+    }
+
+    int aux = bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr));
+
+    if(aux == -1){
+        perror("Erro ao registrar endereço no mapa.");
+    }
+
+    listen(server_socket, MAX_CLIENTS);
+
+    printf("servidor aguardando conexões. . .");
+    
+    while(1){
+        client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &addr_len);
+        if(client_socket < 0){
+            perror("Erro ao aceitar conexão.");
+            continue;
+        }
+
+        char client_ip[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, sizeof(client_ip));
+
+        int client_port = ntohs(client_addr.sin_port);
+        
+        printf("Conexão aceita do cliente %s na porta %d\n", client_ip, client_port);
+    }
 }
