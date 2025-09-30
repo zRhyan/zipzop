@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
     /////////////////////////////////////////////////////////////////////////////////////
     // LANÇANDO A THREAD DO "OUVIDO"
     /////////////////////////////////////////////////////////////////////////////////////
-    
+
     pthread_t thread_id; // Variável para guardar o ID da nossa nova thread.
 
     // A chamada que cria e lança a nova thread!
@@ -122,7 +122,8 @@ int main(int argc, char *argv[]) {
     // 2º arg: Atributos especiais (não precisamos, então NULL).
     // 3º arg: O nome da função que a thread vai executar (nosso "Ouvido").
     // 4º arg: O argumento que vamos passar para a função (o ID do socket).
-    if (pthread_create(&thread_id, NULL, thread_recebimento, (void*) &socket_desc) < 0) {
+    // pthread_create retorna 0 em caso de sucesso e diferente de 0 em erro.
+    if (pthread_create(&thread_id, NULL, thread_recebimento, (void*) &socket_desc) != 0) {
         perror("Nao foi possivel criar a thread");
         return 1;
     }
