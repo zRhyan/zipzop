@@ -9,7 +9,27 @@
 #define MAX_CLIENTS 10 // Número máximo de clientes (para o futuro)
 #define BUFFER_SIZE 2048 // Tamanho do buffer para as mensagens
 
-int main(int argc, char *argv[]){
+void *handle_client(void *arg) {
+    // A primeira coisa a fazer é pegar o "pacote" (arg) e tirar a ferramenta de dentro.
+    int client_socket = *((int*)arg);
+    free(arg); // Lembre-se de jogar a "caixa" do pacote fora para não gerar lixo (memory leak).
+
+    char buffer[BUFFER_SIZE];
+    int bytes_read;
+
+    // Dentro de handle_client, após pegar o client_socket
+    while ( (bytes_read = read(client_socket, buffer, sizeof(buffer) - 1)) > 0 ) {
+        // Cliente enviou uma mensagem!
+        buffer[bytes_read] = '\0'; // Adiciona o terminador nulo para tratar como string
+        printf("Cliente %d diz: %s", client_socket, buffer);
+        // Futuramente, aqui virá a lógica para enviar essa mensagem aos outros clientes
+    }
+
+    close(client_socket);
+    printf("Cliente %d desconectado.\n", client_socket);
+    pthread_exit(NULL);
+}
+void main(int argc, char *argv[]){
 
     if(argc != 2){
         printf("Modo de uso: %s <numero_da_porta>\n", argv[0]);
@@ -45,7 +65,7 @@ int main(int argc, char *argv[]){
     listen(server_socket, MAX_CLIENTS);
 
     printf("servidor aguardando conexões. . .");
-    
+
     while(1){
         client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &addr_len);
         if(client_socket < 0){
@@ -60,4 +80,14 @@ int main(int argc, char *argv[]){
         
         printf("Conexão aceita do cliente %s na porta %d\n", client_ip, client_port);
     }
+
+    pthread_t thread_id;
+    int *p_client_socket = malloc(sizeof(int));
+    *p_client_socket = client_socket;
+
+    pthread_create(&thread_id, NULL, handle_client, (void *)p_client_socket);
+
+    pthread_detach(thread_id);
+
+    return;
 }
